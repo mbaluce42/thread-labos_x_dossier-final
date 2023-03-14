@@ -9,6 +9,7 @@
 
 #define CLE_SEC 0.7 //s
 #define EVEN_SEC 100 //ms
+#define SAUT_DKJnr_SEC 1.4//s
 
 #define VIDE        		0
 #define DKJR       		1
@@ -46,6 +47,10 @@ void HandlerSIGCHLD(int);
 void HandlerSIGHUP(int);
 
 void DestructeurVS(void *p);
+
+void move_LEFT();
+void move_RIGHT();
+void move_UP();
 
 pthread_t threadCle;
 pthread_t threadDK;
@@ -318,68 +323,15 @@ void* FctThreadDKJr(void * Setting)
 			switch (evenement)
 			{
 				case SDLK_LEFT:
-			 	if (positionDKJr > 1)
-			 	{
-			 		//void afficherDKJr(int ligne, int colonne, int num);
-					setGrilleJeu(3, positionDKJr);
-					effacerCarres(11, (positionDKJr * 2) + 7, 2, 2);
-					positionDKJr--;
-					setGrilleJeu(3, positionDKJr, DKJR);
-					afficherDKJr(11, (positionDKJr * 2) + 7, ((positionDKJr - 1) % 4) + 1);
-				}
+				move_LEFT();
 				break;
+
 				case SDLK_RIGHT:
-				if (positionDKJr < 7)
-			 	{
-					setGrilleJeu(3, positionDKJr);
-					effacerCarres(11, (positionDKJr * 2) + 7, 2, 2);
-					positionDKJr++;
-					setGrilleJeu(3, positionDKJr, DKJR);
-					afficherDKJr(11, (positionDKJr * 2) + 7,((positionDKJr - 1) % 4) + 1);
-				}
-			 
+				move_RIGHT();
 				break;
+
 				case SDLK_UP:
-					printf("positionDKJr= %d\n\n", positionDKJr);
-					if(positionDKJr== 2 || positionDKJr==3 || positionDKJr==4 || positionDKJr==6 )
-					{
-						setGrilleJeu(3, positionDKJr);
-						effacerCarres(10, (positionDKJr * 2) + 7, 3, 2);
-						setGrilleJeu(3, positionDKJr, DKJR);
-						afficherDKJr(10, (positionDKJr * 2) + 7, ((positionDKJr - 1) % 4) + 1);
-
-						sleep(1);
-				
-						effacerCarres(10, (positionDKJr * 2) + 7, 3, 2);
-						afficherDKJr(11, (positionDKJr * 2) + 7, ((positionDKJr - 1) % 4) + 1);
-					}
-					else if(positionDKJr==1 || positionDKJr==5)
-					{
-						setGrilleJeu(3, positionDKJr);
-						effacerCarres(10, (positionDKJr * 2) + 7, 3, 2);
-						setGrilleJeu(3, positionDKJr, DKJR);
-						afficherDKJr(10, (positionDKJr * 2) + 7, ((positionDKJr - 1) % 4) + 7);
-
-						sleep(1);
-				
-						effacerCarres(10, (positionDKJr * 2) + 7, 3, 2);
-						afficherDKJr(11, (positionDKJr * 2) + 7, ((positionDKJr - 1) % 4) + 1);
-
-					}
-					else
-						{
-							setGrilleJeu(3, positionDKJr);
-						effacerCarres(10, (positionDKJr * 2) + 7, 3, 2);
-						setGrilleJeu(3, positionDKJr, DKJR);
-						afficherDKJr(10, (positionDKJr * 2) + 7, ((positionDKJr - 1) % 4) + 3);
-
-						sleep(1);
-				
-						effacerCarres(10, (positionDKJr * 2) + 7, 3, 2);
-						afficherDKJr(11, (positionDKJr * 2) + 7, ((positionDKJr - 1) % 4) + 1);
-
-
-						}
+				move_UP();
 				break;
 			}
 			case LIANE_BAS:
@@ -408,3 +360,73 @@ void HandlerSIGQUIT(int sig)
 	printf("thread(%lu) a recu le signal n°%d\n",pthread_self(), sig );	
 }
 
+
+void move_LEFT()
+{
+	if (positionDKJr > 1)
+	{
+		//void afficherDKJr(int ligne, int colonne, int num);
+		setGrilleJeu(3, positionDKJr);
+		effacerCarres(11, (positionDKJr * 2) + 7, 2, 2);
+		positionDKJr--;
+		setGrilleJeu(3, positionDKJr, DKJR);
+		afficherDKJr(11, (positionDKJr * 2) + 7, ((positionDKJr - 1) % 4) + 1);
+	}
+
+}
+
+void move_RIGHT()
+{
+	if (positionDKJr < 7)
+	{
+		setGrilleJeu(3, positionDKJr);
+		effacerCarres(11, (positionDKJr * 2) + 7, 2, 2);
+		positionDKJr++;
+		setGrilleJeu(3, positionDKJr, DKJR);
+		afficherDKJr(11, (positionDKJr * 2) + 7,((positionDKJr - 1) % 4) + 1);
+	}
+
+}
+
+void move_UP()
+{
+	if(positionDKJr== 2 || positionDKJr==3 || positionDKJr==4 || positionDKJr==6 )
+	{
+		setGrilleJeu(3, positionDKJr);
+		effacerCarres(10, (positionDKJr * 2) + 7, 3, 2);
+		setGrilleJeu(3, positionDKJr, DKJR);
+		afficherDKJr(10, (positionDKJr * 2) + 7, ((positionDKJr - 1) % 4) + 1);
+
+		sleep(1);
+				
+		effacerCarres(10, (positionDKJr * 2) + 7, 3, 2);
+		afficherDKJr(11, (positionDKJr * 2) + 7, ((positionDKJr - 1) % 4) + 1);
+	}
+	else if(positionDKJr==1 || positionDKJr==5)
+	{
+		setGrilleJeu(3, positionDKJr);
+		effacerCarres(10, (positionDKJr * 2) + 7, 3, 2);
+		setGrilleJeu(3, positionDKJr, DKJR);
+		afficherDKJr(10, (positionDKJr * 2) + 7, ((positionDKJr - 1) % 4) + 7);
+
+		sleep(1);
+				
+		effacerCarres(10, (positionDKJr * 2) + 7, 3, 2);
+		afficherDKJr(11, (positionDKJr * 2) + 7, ((positionDKJr - 1) % 4) + 1);
+
+	}
+	else
+	{
+		setGrilleJeu(3, positionDKJr);
+		effacerCarres(10, (positionDKJr * 2) + 7, 3, 2);
+		setGrilleJeu(3, positionDKJr, DKJR);
+		afficherDKJr(10, (positionDKJr * 2) + 7, ((positionDKJr - 1) % 4) + 3);
+
+		sleep(1);
+				
+		effacerCarres(10, (positionDKJr * 2) + 7, 3, 2);
+		afficherDKJr(11, (positionDKJr * 2) + 7, ((positionDKJr - 1) % 4) + 1);
+
+	}
+
+}
