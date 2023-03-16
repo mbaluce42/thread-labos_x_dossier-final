@@ -5,7 +5,7 @@
 #include <pthread.h>
 #include <time.h>
 #include <SDL/SDL.h>
-#include "./presentation/presentation.h"
+#include "./presentation/presentation.h" //test
 
 #define CLE_SEC 0.7 //s
 #define EVEN_SEC 100 //ms
