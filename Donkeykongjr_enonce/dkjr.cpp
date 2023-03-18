@@ -50,7 +50,8 @@ void DestructeurVS(void *p);
 
 void move_LEFT();
 void move_RIGHT();
-void move_UP();
+void move_UP(float* tmp);
+void move_DOWN();
 
 pthread_t threadCle;
 pthread_t threadDK;
@@ -76,6 +77,7 @@ int  delaiEnnemis = 4000;
 int  positionDKJr = 1;
 int  evenement = AUCUN_EVENEMENT;
 int etatDKJr;
+int up=0;
 
 typedef struct
 {
@@ -117,6 +119,7 @@ int main(int argc, char* argv[])
 
 	int res,tmp;
 	float cle_sec = CLE_SEC;
+	float sautDKjr_sec= SAUT_DKJnr_SEC;
 
 	ouvrirFenetreGraphique();
 
@@ -140,16 +143,16 @@ int main(int argc, char* argv[])
 	afficherDKJr(6, 19, 7);
 	afficherDKJr(0, 0, 9);*/
 
-	res=pthread_create(&threadDKJr,NULL,FctThreadDKJr,NULL);
+	res=pthread_create(&threadDKJr,NULL,FctThreadDKJr,&sautDKjr_sec);
 	if(res==0){printf("\nThreadDKJr(%lu) cree avec succe\n",threadDKJr); }
 	
-	afficherCorbeau(10, 2);
+	/*afficherCorbeau(10, 2);
 	afficherCorbeau(16, 1);
 	
 	effacerCarres(9, 10, 2, 1);
 
 	afficherEchec(1);
-	afficherScore(1999);
+	afficherScore(1999);*/
 
 
 	tmp=EVEN_SEC;
@@ -276,14 +279,12 @@ void* FctThreadEvenements(void *Setting)
 					printf("KEY_RIGHT\n");
 					break;
 	   }
-	   if(evt==SDLK_UP || evt==SDLK_DOWN || evt==SDLK_LEFT || evt==SDLK_RIGHT ) 	
-	   {
 	    	pthread_mutex_lock(&mutexEvenement);
 	    	evenement=evt;
 	    	pthread_mutex_unlock(&mutexEvenement);
 	    	//printf("\n\n KILLLLLLLL\n");
 	    	pthread_kill(threadDKJr,SIGQUIT);//va permettre de reveiller le DKJr qui est sur pause
-	   }
+
 	   //clock_gettime(CLOCK_MONOTONIC, &debut); // obtenir le temps de début 
 	   nanosleep(&temps,NULL);
 	   /*clock_gettime(CLOCK_MONOTONIC, &fin); // obtenir le temps de fin 
@@ -301,6 +302,9 @@ void* FctThreadDKJr(void * Setting)
 	sigemptyset(&mask); 
 	sigaddset(&mask, SIGQUIT);
 	sigprocmask(SIG_UNBLOCK,&mask,NULL);
+
+	float *tmp= (float*)Setting; //sec
+	//struct timespec temps={(time_t)(*tmp),(long)((*tmp - temps.tv_sec) * 1e9)};
 
 	bool on = true; 
 	pthread_mutex_lock(&mutexGrilleJeu);
@@ -331,24 +335,54 @@ void* FctThreadDKJr(void * Setting)
 				break;
 
 				case SDLK_UP:
-				move_UP();
+				move_UP(tmp);
 				break;
 			}
 			case LIANE_BAS:
-			
+				if(evenement== SDLK_DOWN)
+				{
+					move_DOWN();
+				}
+				
 			break;
 			case DOUBLE_LIANE_BAS:
+				if(evenement== SDLK_DOWN)
+				{
+					move_DOWN();
+				}
+				else if(evenement==SDLK_UP)
+				{
+					move_UP(tmp);
+					
+				}
+				else//(evenement==SDLK_LEFT)
+				{
+					move_LEFT();
+				}
 			
 			break;
 			case LIBRE_HAUT:
+				if(evenement==SDLK_LEFT)
+				{
+					move_LEFT();
+				}
+				else if(evenement==SDLK_UP)
+				{
+					move_UP(tmp);
+				}
+				else if(evenement==SDLK_DOWN)
+				{
+					move_DOWN();
+				}
+
 			
 			break;
 			case LIANE_HAUT:
-			 break;
+			break;
 
 		}
-		pthread_mutex_unlock(&mutexEvenement);
 		pthread_mutex_unlock(&mutexGrilleJeu);
+		pthread_mutex_unlock(&mutexEvenement);
 	}
 	pthread_exit(NULL);
 }
@@ -363,9 +397,8 @@ void HandlerSIGQUIT(int sig)
 
 void move_LEFT()
 {
-	if (positionDKJr > 1)
+	if (positionDKJr > 1 && etatDKJr==LIBRE_BAS)
 	{
-		//void afficherDKJr(int ligne, int colonne, int num);
 		setGrilleJeu(3, positionDKJr);
 		effacerCarres(11, (positionDKJr * 2) + 7, 2, 2);
 		positionDKJr--;
@@ -373,11 +406,32 @@ void move_LEFT()
 		afficherDKJr(11, (positionDKJr * 2) + 7, ((positionDKJr - 1) % 4) + 1);
 	}
 
+	else if(up==2 && etatDKJr==DOUBLE_LIANE_BAS)
+	{
+		setGrilleJeu(3, positionDKJr);
+		effacerCarres(7, (positionDKJr * 2) + 7, 2, 2);
+		positionDKJr--;
+		setGrilleJeu(3, positionDKJr, DKJR);
+		afficherDKJr(7, (positionDKJr * 2) + 7,1 );
+		etatDKJr=LIBRE_HAUT;
+
+	}
+
+	else if(etatDKJr==LIBRE_HAUT && positionDKJr>3)
+	{
+		setGrilleJeu(3, positionDKJr);
+		effacerCarres(7, (positionDKJr * 2) + 7, 2, 2);
+		printf("\n\npositionDKJr=%d\n\n",positionDKJr);
+		positionDKJr--;
+		setGrilleJeu(3, positionDKJr, DKJR);
+		afficherDKJr(7, (positionDKJr * 2) + 7,((positionDKJr - 1) % 4) + 1);
+	}
+
 }
 
 void move_RIGHT()
 {
-	if (positionDKJr < 7)
+	if (positionDKJr < 7 && etatDKJr==LIBRE_BAS)
 	{
 		setGrilleJeu(3, positionDKJr);
 		effacerCarres(11, (positionDKJr * 2) + 7, 2, 2);
@@ -388,45 +442,93 @@ void move_RIGHT()
 
 }
 
-void move_UP()
+void move_UP(float * tmp)
 {
-	if(positionDKJr== 2 || positionDKJr==3 || positionDKJr==4 || positionDKJr==6 )
-	{
-		setGrilleJeu(3, positionDKJr);
-		effacerCarres(10, (positionDKJr * 2) + 7, 3, 2);
-		setGrilleJeu(3, positionDKJr, DKJR);
-		afficherDKJr(10, (positionDKJr * 2) + 7, ((positionDKJr - 1) % 4) + 1);
+	struct timespec temps;
+	temps.tv_sec = (time_t)(*tmp); // partie entière de la durée en sec
+	temps.tv_nsec = (long)((*tmp - temps.tv_sec) * 1e9); // partie décimale convertie en nanosec
 
-		sleep(1);
-				
-		effacerCarres(10, (positionDKJr * 2) + 7, 3, 2);
+	if( (positionDKJr== 2 || positionDKJr==3 || positionDKJr==4 || positionDKJr==6 ) && etatDKJr==LIBRE_BAS)//&& etatDKJr==LIBRE_BAS
+	{	
+		setGrilleJeu(3, positionDKJr);
+		effacerCarres(11, (positionDKJr * 2) + 7, 2, 2);
+		setGrilleJeu(3, positionDKJr, DKJR);
+		afficherDKJr(10, (positionDKJr * 2) + 7,  8);
+
+		pthread_mutex_unlock(&mutexGrilleJeu);
+		nanosleep(&temps,NULL);
+		pthread_mutex_lock(&mutexGrilleJeu);
+
+		effacerCarres(10, (positionDKJr * 2) + 7, 2, 2);
 		afficherDKJr(11, (positionDKJr * 2) + 7, ((positionDKJr - 1) % 4) + 1);
 	}
-	else if(positionDKJr==1 || positionDKJr==5)
+	else if( (positionDKJr==1 || positionDKJr==5) && etatDKJr==LIBRE_BAS)
 	{
-		setGrilleJeu(3, positionDKJr);
-		effacerCarres(10, (positionDKJr * 2) + 7, 3, 2);
-		setGrilleJeu(3, positionDKJr, DKJR);
-		afficherDKJr(10, (positionDKJr * 2) + 7, ((positionDKJr - 1) % 4) + 7);
+		effacerCarres(11, (positionDKJr * 2) + 7, 2, 2);
+		afficherDKJr(10, (positionDKJr * 2) + 7, 7);
 
-		sleep(1);
-				
-		effacerCarres(10, (positionDKJr * 2) + 7, 3, 2);
-		afficherDKJr(11, (positionDKJr * 2) + 7, ((positionDKJr - 1) % 4) + 1);
+		etatDKJr=LIANE_BAS;
+		up++;
+	}
+	else if(positionDKJr== 7) 
+	{
+		effacerCarres(11, (positionDKJr * 2) + 7, 2, 2);
+		afficherDKJr(10,(positionDKJr * 2) + 7, 5);
+		
+		if(etatDKJr==DOUBLE_LIANE_BAS)
+		{
+			effacerCarres(10, (positionDKJr * 2) + 7, 2, 2);
+			afficherDKJr(7,(positionDKJr * 2) + 7, 6);
+			up++;
+		}
+
+		if(etatDKJr==LIBRE_BAS)
+		{
+			etatDKJr=DOUBLE_LIANE_BAS;
+			up++;
+		}
+	}
+	else if( positionDKJr==6 && etatDKJr==LIBRE_HAUT)
+	{
+
+		effacerCarres(7, (positionDKJr * 2) + 7, 2, 2);
+		afficherDKJr(6,(positionDKJr * 2) + 7, 7);
+		etatDKJr=LIANE_HAUT;
+		up++;
 
 	}
-	else
-	{
-		setGrilleJeu(3, positionDKJr);
-		effacerCarres(10, (positionDKJr * 2) + 7, 3, 2);
-		setGrilleJeu(3, positionDKJr, DKJR);
-		afficherDKJr(10, (positionDKJr * 2) + 7, ((positionDKJr - 1) % 4) + 3);
+	
+}
 
-		sleep(1);
-				
-		effacerCarres(10, (positionDKJr * 2) + 7, 3, 2);
-		afficherDKJr(11, (positionDKJr * 2) + 7, ((positionDKJr - 1) % 4) + 1);
+void move_DOWN()
+{
+		if(etatDKJr== LIANE_BAS )
+		{
+			effacerCarres(10, (positionDKJr * 2) + 7, 3, 2);
+			afficherDKJr(11, (positionDKJr * 2) + 7, ((positionDKJr - 1) % 4) + 1);
+			etatDKJr=LIBRE_BAS;
+			up--;
+		}
 
-	}
+		else if(etatDKJr== DOUBLE_LIANE_BAS && up==1)
+		{
+			effacerCarres(10, (positionDKJr * 2) + 7, 3, 2);
+			afficherDKJr(11, (positionDKJr * 2) + 7, ((positionDKJr - 1) % 4) +1);
+			etatDKJr=LIBRE_BAS;
+			up--;
+		}
+		else if(up==2 && etatDKJr== DOUBLE_LIANE_BAS )
+		{
+			effacerCarres(7, (positionDKJr * 2) + 7, 2, 2);
+			afficherDKJr(10,(positionDKJr * 2) + 7,5);
+			up--;
 
+		}
+		else if(up==3 && etatDKJr==LIANE_HAUT)
+		{
+			effacerCarres(6, (positionDKJr * 2) + 7, 2, 2);
+			//afficherDKJr(7,(positionDKJr * 2) + 7,1);
+			up--;
+		}
+		
 }
