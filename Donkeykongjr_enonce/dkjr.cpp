@@ -5,7 +5,7 @@
 #include <pthread.h>
 #include <time.h>
 #include <SDL/SDL.h>
-#include "./presentation/presentation.h"
+#include "./presentation/presentation.h" //test
 
 #define CLE_SEC 0.7 //s
 #define EVEN_SEC 100 //ms
@@ -52,6 +52,7 @@ void move_LEFT();
 void move_RIGHT();
 void move_UP(float* tmp);
 void move_DOWN();
+void Faille_DKjr();
 
 pthread_t threadCle;
 pthread_t threadDK;
@@ -164,6 +165,8 @@ int main(int argc, char* argv[])
 	res=pthread_join(threadEvenements,NULL);
 	if(res==0){printf("\nthreadEvenements(%lu) fini, arrete avec succes",threadEvenements);}
 
+	res=pthread_join(threadDKJr,NULL);
+	if(res==0){printf("\nthreadDKJr(%lu) fini, arrete avec succes",threadDKJr);}
 
 	return 0;
 
@@ -343,41 +346,43 @@ void* FctThreadDKJr(void * Setting)
 				{
 					move_DOWN();
 				}
-				
 			break;
 			case DOUBLE_LIANE_BAS:
-				if(evenement== SDLK_DOWN)
+				switch(evenement)
 				{
-					move_DOWN();
+					 case SDLK_UP:
+					 	move_UP(tmp);
+					 	break;
+					 case SDLK_DOWN:
+					 	move_DOWN();
+					 	break;
+					 case SDLK_LEFT:
+					 	move_LEFT();
+					 	break;
 				}
-				else if(evenement==SDLK_UP)
-				{
-					move_UP(tmp);
-					
-				}
-				else//(evenement==SDLK_LEFT)
-				{
-					move_LEFT();
-				}
-			
 			break;
 			case LIBRE_HAUT:
-				if(evenement==SDLK_LEFT)
+				switch(evenement)
 				{
-					move_LEFT();
+					case SDLK_LEFT:
+						move_LEFT();
+						break;
+					case SDLK_RIGHT:
+						move_RIGHT();
+						break;
+					case SDLK_UP:
+						move_UP(tmp);
+						break;
+					case SDLK_DOWN:
+						move_DOWN();
+						break;
 				}
-				else if(evenement==SDLK_UP)
-				{
-					move_UP(tmp);
-				}
-				else if(evenement==SDLK_DOWN)
-				{
-					move_DOWN();
-				}
-
-			
 			break;
 			case LIANE_HAUT:
+				if(evenement==SDLK_DOWN)
+				{
+					move_DOWN();
+				}			
 			break;
 
 		}
@@ -419,13 +424,27 @@ void move_LEFT()
 
 	else if(etatDKJr==LIBRE_HAUT && positionDKJr>3)
 	{
+
 		setGrilleJeu(3, positionDKJr);
 		effacerCarres(7, (positionDKJr * 2) + 7, 2, 2);
-		printf("\n\npositionDKJr=%d\n\n",positionDKJr);
 		positionDKJr--;
 		setGrilleJeu(3, positionDKJr, DKJR);
 		afficherDKJr(7, (positionDKJr * 2) + 7,((positionDKJr - 1) % 4) + 1);
+
 	}
+	else if(etatDKJr==LIBRE_HAUT && positionDKJr==3)
+	{
+		Faille_DKjr();
+
+		/*setGrilleJeu(3, positionDKJr);
+		effacerCarres(7, (positionDKJr * 2) + 7, 2, 2);
+		positionDKJr--;
+		setGrilleJeu(3, positionDKJr, DKJR);
+		afficherDKJr(7, (positionDKJr * 2) + 7,((positionDKJr - 1) % 4) + 1);*/
+
+	}
+
+	printf("\n\npositionDKJr=%d\n\n",positionDKJr);
 
 }
 
@@ -439,6 +458,24 @@ void move_RIGHT()
 		setGrilleJeu(3, positionDKJr, DKJR);
 		afficherDKJr(11, (positionDKJr * 2) + 7,((positionDKJr - 1) % 4) + 1);
 	}
+	else if(etatDKJr==LIBRE_HAUT && positionDKJr<7)
+	{
+		setGrilleJeu(3, positionDKJr);
+		effacerCarres(7, (positionDKJr * 2) + 7, 2, 2);
+		positionDKJr++;
+		setGrilleJeu(3, positionDKJr, DKJR);
+		if (positionDKJr== 7)
+		{
+			afficherDKJr(7,(positionDKJr * 2) + 7, 6);
+			etatDKJr=DOUBLE_LIANE_BAS;//
+		}
+		else //positionDKJr != 7 
+		{
+			afficherDKJr(7, (positionDKJr * 2) + 7,((positionDKJr - 1) % 4) + 1);
+		}
+		
+	}
+	printf("positionDKJr=%d\n\n",positionDKJr);
 
 }
 
@@ -470,33 +507,66 @@ void move_UP(float * tmp)
 		etatDKJr=LIANE_BAS;
 		up++;
 	}
+
 	else if(positionDKJr== 7) 
 	{
-		effacerCarres(11, (positionDKJr * 2) + 7, 2, 2);
-		afficherDKJr(10,(positionDKJr * 2) + 7, 5);
+		if (etatDKJr==LIBRE_BAS)
+		{
+			effacerCarres(11, (positionDKJr * 2) + 7, 2, 2);
+			afficherDKJr(10,(positionDKJr * 2) + 7, 5);
+			etatDKJr=DOUBLE_LIANE_BAS;
+			up++;
+		}
 		
-		if(etatDKJr==DOUBLE_LIANE_BAS)
+		
+		else if(etatDKJr==DOUBLE_LIANE_BAS && up==1)
 		{
 			effacerCarres(10, (positionDKJr * 2) + 7, 2, 2);
 			afficherDKJr(7,(positionDKJr * 2) + 7, 6);
 			up++;
 		}
-
-		if(etatDKJr==LIBRE_BAS)
-		{
-			etatDKJr=DOUBLE_LIANE_BAS;
-			up++;
-		}
 	}
-	else if( positionDKJr==6 && etatDKJr==LIBRE_HAUT)
+	else if(etatDKJr==LIBRE_HAUT)
 	{
+		if(positionDKJr==6 )
+		{
+			effacerCarres(7, (positionDKJr * 2) + 7, 2, 2);
+			afficherDKJr(6,(positionDKJr * 2) + 7, 7);
+			etatDKJr=LIANE_HAUT;
+			printf("up avant =%d\n",up);
+			up++;
+			printf("up apres= %d\n",up);
 
-		effacerCarres(7, (positionDKJr * 2) + 7, 2, 2);
-		afficherDKJr(6,(positionDKJr * 2) + 7, 7);
-		etatDKJr=LIANE_HAUT;
-		up++;
+		}
+		else if(positionDKJr==3 || positionDKJr==4)
+		{
 
+			effacerCarres(7, (positionDKJr * 2) + 7, 2, 2);
+			afficherDKJr(6,(positionDKJr * 2) + 7, 8);
+
+					pthread_mutex_unlock(&mutexGrilleJeu);
+				nanosleep(&temps,NULL);
+				pthread_mutex_lock(&mutexGrilleJeu);
+
+				effacerCarres(6, (positionDKJr * 2) + 7, 2, 2);
+
+				//afficherDKJr(7,(positionDKJr * 2) + 7,1);
+			/*else
+			{
+				pthread_mutex_unlock(&mutexGrilleJeu);
+				//nanosleep(&temps,NULL);
+				sleep(0.5);
+				pthread_mutex_lock(&mutexGrilleJeu);
+	
+				effacerCarres(6, (positionDKJr * 2) + 7, 2, 2);
+			}*/
+			
+
+		}
+		
 	}
+
+	printf("\n\npositionDKJr=%d\n\n",positionDKJr);
 	
 }
 
@@ -527,8 +597,38 @@ void move_DOWN()
 		else if(up==3 && etatDKJr==LIANE_HAUT)
 		{
 			effacerCarres(6, (positionDKJr * 2) + 7, 2, 2);
-			//afficherDKJr(7,(positionDKJr * 2) + 7,1);
+			afficherDKJr(7,(positionDKJr * 2) + 7,1);
+			etatDKJr=LIBRE_HAUT;
 			up--;
 		}
+
+		printf("\n\npositionDKJr=%d\n\n",positionDKJr);
 		
 }
+
+void Faille_DKjr()
+{
+	if(grilleJeu[0][1].type== VIDE)
+	{
+		/*setGrilleJeu(3, positionDKJr);
+		positionDKJr--;
+		setGrilleJeu(3, positionDKJr, DKJR);*/
+
+		positionDKJr--;//=2
+		afficherDKJr(5,(positionDKJr*2)+7+1,9); //9
+		
+		effacerCarres(5, (positionDKJr * 2) + 7+1, 3, 2);
+		//effacerCarres(5, 12, 3, 2);
+		positionDKJr--;
+		afficherDKJr(10,(positionDKJr*2)+7+1,12);//1 7
+		//effacerCarres(5, (positionDKJr * 2) + 7+1, 3, 2);
+		//effacerCarres(8, (positionDKJr*2) +8+1, 3, 2); //10 attrap cle
+
+		afficherDKJr(11,8,((positionDKJr - 1) % 2) +13);
+
+		pthread_exit(NULL);
+	}
+}
+
+
+
