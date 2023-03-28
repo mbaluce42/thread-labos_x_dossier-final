@@ -306,6 +306,43 @@ void* FctThreadEvenements(void *Setting)
 	pthread_exit(NULL);
 
 }
+void* FctThreadDK(void *)
+{
+	struct timespec temps;
+	float tmp= RIRE_DK;
+	temps.tv_sec = (time_t)(tmp); // partie entière de la durée en sec
+	temps.tv_nsec = (long)((tmp - temps.tv_sec) * 1e9); // partie décimale convertie en nanosec
+	
+    int i=1;
+    
+	afficherCage(2);//1
+	afficherCage(1);//2
+    afficherCage(3);
+    afficherCage(4);
+    	
+	pthread_mutex_lock(&mutexDK);
+    while (MAJDK==false) 
+    {
+		printf("\n\navant wait\n\n");
+     	pthread_cond_wait(&condDK, &mutexDK);
+		printf("\n\napres wait\n\n");
+		if(i==1){effacerCarres(2,9,2,2); i++;}
+		else if(i==2){effacerCarres(2,7,2,2);i++;}
+		else if(i==3){effacerCarres(4,7,2,2);;i++;}
+		else if(i==4)
+		{
+			effacerCarres(4,9,4,3);
+			afficherRireDK();
+			pthread_mutex_unlock(&mutexGrilleJeu);
+			nanosleep(&temps,NULL);
+			pthread_mutex_lock(&mutexGrilleJeu);
+			effaceRire();
+			afficherCage(1); afficherCage(2); afficherCage(3); afficherCage(4);
+			i=1;
+		}
+    }
+    pthread_mutex_unlock(&mutexDK);
+}
 
 void* FctThreadDKJr(void * Setting)
 {
@@ -576,46 +613,6 @@ void move_DOWN()
 
 		printf("\n\npositionDKJr=%d\n\n",positionDKJr);
 		
-}
-
-void* FctThreadDK(void *)
-{
-	struct timespec temps;
-	float tmp= RIRE_DK;
-	temps.tv_sec = (time_t)(tmp); // partie entière de la durée en sec
-	temps.tv_nsec = (long)((tmp - temps.tv_sec) * 1e9); // partie décimale convertie en nanosec
-	
-    int i=1;
-    
-	afficherCage(2);//1
-	afficherCage(1);//2
-    afficherCage(3);
-    afficherCage(4);
-    	
-	pthread_mutex_lock(&mutexDK);
-    while (MAJDK==false) 
-    {
-		printf("\n\navant wait\n\n");
-     	pthread_cond_wait(&condDK, &mutexDK);
-		printf("\n\napres wait\n\n");
-		if(i==1){effacerCarres(2,9,2,2); i++;}
-		else if(i==2){effacerCarres(2,7,2,2);i++;}
-		else if(i==3){effacerCarres(4,7,2,2);;i++;}
-		else if(i==4)
-		{
-			effacerCarres(4,9,4,3);
-			afficherRireDK();
-			pthread_mutex_unlock(&mutexGrilleJeu);
-			nanosleep(&temps,NULL);
-			pthread_mutex_lock(&mutexGrilleJeu);
-			effaceRire();
-			i=1;
-		}
-    }
-
-
-	
-    pthread_mutex_unlock(&mutexDK);
 }
 
 void Try_Key_DKjr()
