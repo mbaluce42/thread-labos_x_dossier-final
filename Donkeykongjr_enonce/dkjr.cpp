@@ -166,7 +166,6 @@ int main(int argc, char* argv[])
 	pthread_cancel(threadScore);
 	pthread_cancel(threadCorbeau);
 	pthread_cancel(threadCroco);
-	
 	res=pthread_join(threadCle,NULL);
 	if(res==0){printf("\nthreadCle(%lu) fini, arrete avec succes\n",threadCle);}
 
@@ -553,6 +552,8 @@ void* FctThreadCorbeau(void* Setting)
 			pthread_mutex_unlock(&mutexGrilleJeu);
 			effacerCarres(9,((*positionCorbeau)*2)+8,2); 
 			(*positionCorbeau)++;
+
+
 		}
 	}
 
